@@ -3,13 +3,10 @@
 Prosty uploader produktów z dokumentu csv w formacie:
 
 Kod SKU;
-
 EAN;
-
 Nazwa produktu;
-
-cena;symbol dostawy z subiekta;
-
+cena;
+symbol dostawy z subiekta;
 czas dostawy;
 
 Przed użyciem należy skonfigurować plik config/uploader.ini ustawić parametry:
