@@ -1,14 +1,55 @@
 <?php
 use SubiektProductsUploader\Config;
 use SubiektProductsUploader\Parser\CsvFile;
+use SubiektProductsUploader\SubiektApi;
 
 require_once(dirname(__FILE__).'/init.php');
 
 	//Config object	
+	session_start();
+	
 	$cfg = new Config(CONFIG_INI_FILE);
 	$cfg->load();
 
-	$csvfile = new CsvFile(dirname(__FILE__).'/testdata.csv');
+	if(isset($_POST['cancelfile']) && isset($_SESSION['products_file'])){
+		unlink($_SESSION['products_file']);
+		unset($_SESSION['products_file']);
+	}
+
+	$processing_response = array();
+	if(isset($_POST['processfile']) && isset($_SESSION['products_file'])) {
+		$csvfile = new CsvFile($_SESSION['products_file']);
+		$api = new SubiektApi($cfg->getAPIKey(),$cfg->getEndPoint());
+		foreach($csvfile->getRow() as $row){
+
+			$product = array(
+				'supplier_code' => $row[0],
+				'code'=>$row[1],
+				'name' => $row[2], 										
+				'price' => $row[3],
+				'supplier_id' => $row[5],
+				'time_of_delivery' => $row[4],	
+				);
+		
+			$processing_response[$row[0]] =  $api->call('product/add',$product);
+		}
+		//TODO: usunać plik 
+		unlink($_SESSION['products_file']);
+		unset($_SESSION['products_file']);
+	}
+
+	if(isset($_FILES['products_file'])){
+		$csvfile = new CsvFile($_FILES['products_file']['tmp_name']);	
+		$file_name = tempnam('/tmp','api-uploader');
+		file_put_contents($file_name, file_get_contents($_FILES['products_file']['tmp_name']));
+		$_SESSION['products_file'] = $file_name;
+	}
+
+	if(isset($_SESSION['products_file'])){		
+		$csvfile = new CsvFile($_SESSION['products_file']);	
+	}
+
+	//var_dump($_FILES);
 
 ?>
 <!DOCTYPE html>
@@ -35,6 +76,8 @@ require_once(dirname(__FILE__).'/init.php');
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="stylesheet" href="css/font-awesome.min.css">
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.js" integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="js/jquery.api.uploader.js">
     
 </head>
 <body>
@@ -43,7 +86,7 @@ require_once(dirname(__FILE__).'/init.php');
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <div class="container">
  
-    <form method="post">
+    <form enctype="multipart/form-data" method="post">
     <div class="row">
       <div class="twleve columns" style="margin-top:30px;">     
          <h4>Import produktów do subiekta</h4>     
@@ -54,7 +97,7 @@ require_once(dirname(__FILE__).'/init.php');
   <div class="row">
   	 <div class="one-half column">
      		<label for="newprefix">Plik (csv)</label>
-          <input class="u-full-width" name="newprefix" type="file" placeholder="załaduj plik">
+          <input class="u-full-width" name="products_file" type="file" placeholder="załaduj plik">
       </div> 
   </div>   
   <div class="row">
@@ -63,9 +106,33 @@ require_once(dirname(__FILE__).'/init.php');
       </div>  
   </div>  
 </form>
-<?php if($csvfile>0): ?>
+<?php if(count($processing_response)>0): ?>
     <div class="row">
-    	<form>
+    	<form method="post">
+      <div class="twleve columns" style="margin-top:30px;"> 
+      <h5>Informacja o imporcie produktów</h5> 
+      <table style="width:100%;">
+      	<thead>
+      		<tr>
+      			<td>SKU</td>
+      			<td>Odpowiedź Subiekta</td>
+      		</tr>
+      	</thead>	
+      	<tbody>
+      		<?php foreach($processing_response as $code => $row): ?>
+      			<tr>
+      				<td ><?php echo $code ?></td>
+      				<td><?php echo ($row['state']).'=>'.$row['message']; ?></td>      				
+      			</tr>
+      		<?php endforeach; ?>
+      	</tbody>
+      </table>
+      </div>
+
+<?php endif;?>
+<?php if($csvfile->count()>0 && count($processing_response)==0): ?>
+    <div class="row">
+    	<form method="post">
       <div class="twleve columns" style="margin-top:30px;"> 
       <h5>Weryfikacja wprowadzonego pliku</h5> 
       <table>
@@ -78,18 +145,20 @@ require_once(dirname(__FILE__).'/init.php');
       			<td>Cena detal brutto</td>
       			<td>Id dostawycy</td>
       			<td>Czas realizacji</td>
+      			<td>Status importu</td>
       		</tr>
       	</thead>
       	<tbody>
       		<?php foreach($csvfile->getRow() as $row): ?>
-      			<tr>
-      				<td><?php echo $row[0] ?></td>
+      			<tr id="<?php echo $row[0] ?>">
+      				<td ><?php echo $row[0] ?></td>
       				<td><?php echo $row[1] ?></td>
       				<td><?php echo $row[2] ?></td>
       				<td><?php echo $row[3] ?></td>
       				<td><?php echo $row[4] ?></td>
       				<td><?php echo $row[5] ?></td>
       				<td><?php echo $row[6] ?></td>
+      				<td id="status_<?php echo $row[0] ?>"></td>
       			</tr>
       		<?php endforeach; ?>
       	</tbody>
@@ -97,7 +166,8 @@ require_once(dirname(__FILE__).'/init.php');
       </div>
         <div class="row">
 	  	  <div class="one-half column">
-	     		<input class="button-primary" type="submit" value="Zatwierdzam dane" name="processfile">     		
+	     		<input class="button-primary" type="submit" value="Zatwierdzam dane" name="processfile">  
+	     		<input class="button-primary" type="submit" value="Usuwam plik" name="cancelfile">    		
 	      </div>  
   	</div>  
   	</form>
