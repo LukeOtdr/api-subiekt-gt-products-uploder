@@ -26,9 +26,10 @@ require_once(dirname(__FILE__).'/init.php');
 				'supplier_code' => $row[0],
 				'code'=>$row[1],
 				'name' => $row[2], 										
-				'price' => $row[3],
+				'wholesale_price' => $row[3],
+				'price' => $row[4],
 				'supplier_id' => $row[5],
-				'time_of_delivery' => $row[4],	
+				'time_of_delivery' => $row[6],	
 				);
 		
 			$processing_response[$row[0]] =  $api->call('product/add',$product);
@@ -122,7 +123,7 @@ require_once(dirname(__FILE__).'/init.php');
       		<?php foreach($processing_response as $code => $row): ?>
       			<tr>
       				<td ><?php echo $code ?></td>
-      				<td><?php echo ($row['state']).'=>'.$row['message']; ?></td>      				
+      				<td><?php echo ($row['state']).'=>'.$row['message']; ?><?php print_r($row);?></td>      				
       			</tr>
       		<?php endforeach; ?>
       	</tbody>
@@ -135,17 +136,16 @@ require_once(dirname(__FILE__).'/init.php');
     	<form method="post">
       <div class="twleve columns" style="margin-top:30px;"> 
       <h5>Weryfikacja wprowadzonego pliku</h5> 
-      <table>
+      <table style="width:100%;">
       	<thead>
       		<tr>
       			<td>SKU</td>
       			<td>EAN</td>
       			<td>Nazwa</td>
-      			<td>Cena netto</td>
+      			<td>Cena netto zakupu</td>
       			<td>Cena detal brutto</td>
       			<td>Id dostawycy</td>
-      			<td>Czas realizacji</td>
-      			<td>Status importu</td>
+      			<td>Czas realizacji</td>      			
       		</tr>
       	</thead>
       	<tbody>
@@ -158,7 +158,6 @@ require_once(dirname(__FILE__).'/init.php');
       				<td><?php echo $row[4] ?></td>
       				<td><?php echo $row[5] ?></td>
       				<td><?php echo $row[6] ?></td>
-      				<td id="status_<?php echo $row[0] ?>"></td>
       			</tr>
       		<?php endforeach; ?>
       	</tbody>
