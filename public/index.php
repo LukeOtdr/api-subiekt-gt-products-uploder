@@ -15,7 +15,8 @@ require_once(dirname(__FILE__).'/init.php');
 		unlink($_SESSION['products_file']);
 		unset($_SESSION['products_file']);
 	}
-
+  
+  $csvfile = false;
 	$processing_response = array();
 	if(isset($_POST['processfile']) && isset($_SESSION['products_file'])) {
 		$csvfile = new CsvFile($_SESSION['products_file']);
@@ -41,7 +42,7 @@ require_once(dirname(__FILE__).'/init.php');
 
 	if(isset($_FILES['products_file'])){
 		$csvfile = new CsvFile($_FILES['products_file']['tmp_name']);	
-		$file_name = tempnam('/tmp','api-uploader');
+		$file_name = tempnam(sys_get_temp_dir(),'api-uploader');
 		file_put_contents($file_name, file_get_contents($_FILES['products_file']['tmp_name']));
 		$_SESSION['products_file'] = $file_name;
 	}
@@ -131,7 +132,7 @@ require_once(dirname(__FILE__).'/init.php');
       </div>
 
 <?php endif;?>
-<?php if($csvfile->count()>0 && count($processing_response)==0): ?>
+<?php if($csvfile && $csvfile->count()>0 && count($processing_response)==0): ?>
     <div class="row">
     	<form method="post">
       <div class="twleve columns" style="margin-top:30px;"> 
