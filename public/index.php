@@ -32,8 +32,17 @@ require_once(dirname(__FILE__).'/init.php');
 				'supplier_id' => $row[5],
 				'time_of_delivery' => $row[6],	
 				);
-		
-			$processing_response[$row[0]] =  $api->call('product/add',$product);
+		    
+        $is_exists = $api->call('product/isexists',$product);
+        
+        if($is_exists['state'] == 'success'){
+          if($is_exists['data'] == false) {
+              $processing_response[$row[0]] =  $api->call('product/add',$product);
+          }else{
+              $processing_response[$row[0]] =  $api->call('product/update',$product);      
+          }
+        }
+			
 		}
 		//TODO: usunać plik 
 		unlink($_SESSION['products_file']);
