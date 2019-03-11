@@ -37,7 +37,7 @@ class SubiektApi
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->verify_ssl);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($request_data));
-            $result = curl_exec($ch);
+            $result = curl_exec($ch);            
         } else {
             $json_data = json_encode($args);
             $result    = file_get_contents($url, null, stream_context_create(array(
@@ -50,7 +50,7 @@ class SubiektApi
                                           "Content-length: " . strlen($request_data) . "\r\n",
                     'content'          => $json_data,
                 ),
-            )));
+            )));            
         }
 
         return $result ? json_decode($result, true) : false;

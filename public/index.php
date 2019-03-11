@@ -31,6 +31,8 @@ require_once(dirname(__FILE__).'/init.php');
 				'price' => $row[4],
 				'supplier_id' => $row[5],
 				'time_of_delivery' => $row[6],	
+        'intrastat_code'=>!empty($row[7])?$row[7]:null,
+        'intrastat_country_id'=>!empty($row[8])?$row[8]:null,
 				);
 		    
         $is_exists = $api->call('product/isexists',$product);
@@ -45,6 +47,7 @@ require_once(dirname(__FILE__).'/init.php');
 			
 		}
 		//TODO: usunać plik 
+    //var_dump($processing_response);
 		unlink($_SESSION['products_file']);
 		unset($_SESSION['products_file']);
 	}
@@ -60,7 +63,7 @@ require_once(dirname(__FILE__).'/init.php');
 		$csvfile = new CsvFile($_SESSION['products_file']);	
 	}
 
-	//var_dump($_FILES);
+	//var_dump($_SESSION['products_file']);
 
 ?>
 <!DOCTYPE html>
@@ -155,7 +158,9 @@ require_once(dirname(__FILE__).'/init.php');
       			<td>Cena netto zakupu</td>
       			<td>Cena detal brutto</td>
       			<td>Id dostawycy</td>
-      			<td>Czas realizacji</td>      			
+      			<td>Czas realizacji</td>   
+            <td>Kod intrastat</td>  			
+            <td>Kod kraju pochodzenia</td> 
       		</tr>
       	</thead>
       	<tbody>
@@ -168,6 +173,8 @@ require_once(dirname(__FILE__).'/init.php');
       				<td><?php echo $row[4] ?></td>
       				<td><?php echo $row[5] ?></td>
       				<td><?php echo $row[6] ?></td>
+              <td><?php echo !empty($row[7])?$row[7]:'' ?></td>
+              <td><?php echo !empty($row[8])?$row[8]:'' ?></td>
       			</tr>
       		<?php endforeach; ?>
       	</tbody>
