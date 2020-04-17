@@ -1,4 +1,5 @@
 <?php
+
 use SubiektProductsUploader\Config;
 use SubiektProductsUploader\Parser\CsvFile;
 use SubiektProductsUploader\SubiektApi;
@@ -19,32 +20,52 @@ require_once(dirname(__FILE__).'/init.php');
   $csvfile = false;
 	$processing_response = array();
 	if(isset($_POST['processfile']) && isset($_SESSION['products_file'])) {
+
 		$csvfile = new CsvFile($_SESSION['products_file']);
 		$api = new SubiektApi($cfg->getAPIKey(),$cfg->getEndPoint());
 		foreach($csvfile->getRow() as $row){
-
+      //var_dump($row);
 			$product = array(
 				'supplier_code' => $row[0],
 				'code'=>$row[1],
-				'name' => $row[2], 										
-				'wholesale_price' => $row[3],
-				'price' => $row[4],
-				'supplier_id' => $row[5],
-				'time_of_delivery' => $row[6],	
-        'intrastat_code'=>!empty($row[7])?$row[7]:null,
-        'intrastat_country_id'=>!empty($row[8])?$row[8]:null,
+        'ean'=>$row[2],
+				'name' => $row[3], 	
+        'name_for_devices' => $row[4],									
+        'description' => $row[5],
+				'wholesale_price' => $row[6],
+				'price' => $row[7],
+        'vat' => $row[8],
+        'weight' => $row[9],
+        'capacity' => $row[10],
+        'supplier_id' => $row[11],
+        'time_of_delivery' => $row[12],  
+        'intrastat_code'=>!empty($row[13])?$row[13]:null,
+        'intrastat_country_id'=>!empty($row[14])?$row[14]:null,
+        'attribute'=>!empty($row[15])?$row[15]:null,
+        'off_prefix' => 1
 				);
 		    
+        /*
+        'time_of_delivery' => $row[6],  
+        'group_id' => $row[7], 
+        'intrastat_code'=>!empty($row[8])?$row[8]:null,
+        'intrastat_country_id'=>!empty($row[9])?$row[9]:null,
+        */
+        //echo '<pre>';
         $is_exists = $api->call('product/isexists',$product);
-        
+        //var_dump($is_exists);
+        //ECHO $is_exists;
         if($is_exists['state'] == 'success'){
           if($is_exists['data'] == false) {
               $processing_response[$row[0]] =  $api->call('product/add',$product);
           }else{
+              //echo "JEST";
               $processing_response[$row[0]] =  $api->call('product/update',$product);      
           }
         }
-			
+        $p =  $api->call('product/get',$product);  
+        //var_dump($p);
+		  //exit;  	
 		}
 		//TODO: usunać plik 
     //var_dump($processing_response);
@@ -136,7 +157,7 @@ require_once(dirname(__FILE__).'/init.php');
       		<?php foreach($processing_response as $code => $row): ?>
       			<tr>
       				<td ><?php echo $code ?></td>
-      				<td><?php echo ($row['state']).'=>'.$row['message']; ?><?php print_r($row);?></td>      				
+      				<td><?php echo ($row['state']) ?></td>      				
       			</tr>
       		<?php endforeach; ?>
       	</tbody>
@@ -154,13 +175,20 @@ require_once(dirname(__FILE__).'/init.php');
       		<tr>
       			<td>SKU</td>
       			<td>EAN</td>
+            <td>Kod kreskowy</td>
       			<td>Nazwa</td>
+            <td>Nazwa w urzą.</td>
+            <td>Opis</td>
       			<td>Cena netto zakupu</td>
       			<td>Cena detal brutto</td>
+            <td>st. VAT</td>
+            <td>Masa</td>
+            <td>Objętość</td>
       			<td>Id dostawycy</td>
       			<td>Czas realizacji</td>   
             <td>Kod intrastat</td>  			
             <td>Kod kraju pochodzenia</td> 
+            <td>Cecha</td>
       		</tr>
       	</thead>
       	<tbody>
@@ -173,8 +201,15 @@ require_once(dirname(__FILE__).'/init.php');
       				<td><?php echo $row[4] ?></td>
       				<td><?php echo $row[5] ?></td>
       				<td><?php echo $row[6] ?></td>
-              <td><?php echo !empty($row[7])?$row[7]:'' ?></td>
-              <td><?php echo !empty($row[8])?$row[8]:'' ?></td>
+              <td><?php echo $row[7] ?></td>
+              <td><?php echo $row[8] ?></td>
+              <td><?php echo $row[9] ?></td>
+              <td><?php echo $row[10] ?></td>
+              <td><?php echo $row[11] ?></td>
+              <td><?php echo $row[12] ?></td>
+              <td><?php echo !empty($row[13])?$row[13]:'' ?></td>
+              <td><?php echo !empty($row[14])?$row[14]:'' ?></td>
+              <td><?php echo !empty($row[15])?$row[15]:'' ?></td>
       			</tr>
       		<?php endforeach; ?>
       	</tbody>
